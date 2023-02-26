@@ -1,0 +1,8 @@
+# depslib dependency file v1.0
+1677152048 source:/home/daksith/Documents/Riscv_emulator/main.cpp
+	<iostream>
+	"Riscv_core.h"
+
+1677152682 /home/daksith/Documents/Riscv_emulator/Riscv_core.h
+	<stdint.h>
+
