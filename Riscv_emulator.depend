@@ -1,8 +1,14 @@
 # depslib dependency file v1.0
-1677152048 source:/home/daksith/Documents/Riscv_emulator/main.cpp
+1677579124 source:/home/daksith/Documents/Riscv_emulator/main.cpp
 	<iostream>
+	<bitset>
 	"Riscv_core.h"
 
-1677152682 /home/daksith/Documents/Riscv_emulator/Riscv_core.h
+1677579726 /home/daksith/Documents/Riscv_emulator/Riscv_core.h
 	<stdint.h>
+	<stdio.h>
+	<memory.h>
+	"Decode_defs.h"
+
+1677397968 /home/daksith/Documents/Riscv_emulator/Decode_defs.h
 
