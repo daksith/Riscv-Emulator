@@ -13,4 +13,10 @@
 #define rops32 0b0111011
 #define iops32 0b0011011
 
+#define gp 3
+#define ra 1
+#define sp 2
+#define tp 4
+#define t0 5
+
 #endif // DECODE_DEFS_H_INCLUDED

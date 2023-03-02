@@ -5,12 +5,14 @@
 #include <memory.h>
 #include "Decode_defs.h"
 
+using namespace std;
+
 class Riscv_core
 {
     public:
         uint64_t regfile[32] = {0};
-        uint8_t memory[65536];
-        uint64_t pc = 4;
+        uint8_t memory[1<<16];
+        uint64_t pc = 0;
 
     void exec_nxt_ins(){
 
@@ -58,23 +60,23 @@ class Riscv_core
         if (ins_31 == 1){
             imm_i = (4294967295 & ~2047) | (ins_30_25 << 5) | (ins_24_21 << 1) | (ins_20);
             imm_s = (4294967295 & ~2047) | (ins_30_25 << 5) | (ins_11_8 << 1) | (ins_7);
-            imm_b = (4294967295 & ~4095) | (ins_30_25 << 5) | (ins_11_8 << 1) | (ins_7);
+            imm_b = (~4095) | (ins_7 << 11) | (ins_30_25 << 5) | (ins_11_8 << 1);
             imm_u = (ins_31 << 31) | (ins_30_20 << 20) | (ins_19_12 << 12);
             imm_j = (4294967295 & ~1048525) | (ins_20 << 11) | (ins_30_25 << 5) | (ins_24_21 << 1);
         }else{
             imm_i = (ins_30_25 << 5) | (ins_24_21 << 1) | (ins_20);
             imm_s = (ins_30_25 << 5) | (ins_11_8 << 1) | (ins_7);
-            imm_b = (ins_30_25 << 5) | (ins_11_8 << 1) | (ins_7);
+            imm_b = (ins_7 << 11) | (ins_30_25 << 5) | (ins_11_8 << 1);
             imm_u = (ins_30_20 << 20) | (ins_19_12 << 12);
             imm_j = (ins_20 << 11) | (ins_30_25 << 5) | (ins_24_21 << 1);
         }
 
         //sign extend immediates to 64 bits
-        uint64_t imm_i_64 = (int64_t) (int)imm_i;
-        uint64_t imm_s_64 = (int64_t) (int)imm_s;
-        uint64_t imm_b_64 = (int64_t) (int)imm_b;
-        uint64_t imm_u_64 = (int64_t) (int)imm_u;
-        uint64_t imm_j_64 = (int64_t) (int)imm_j;
+        uint64_t imm_i_64 = (int64_t) (int32_t)imm_i;
+        uint64_t imm_s_64 = (int64_t) (int32_t)imm_s;
+        uint64_t imm_b_64 = (int64_t) (int32_t)imm_b;
+        uint64_t imm_u_64 = (int64_t) (int32_t)imm_u;
+        uint64_t imm_j_64 = (int64_t) (int32_t)imm_j;
 
         //fence
         if (opcode == 0b0001111 || opcode == 0b1110011){
@@ -130,6 +132,7 @@ class Riscv_core
                 }else{
                     //SUB
                     regfile[rd] = regfile[rs1] - regfile[rs2];
+                    pc += 4;
                 }
             }else if(fun3==1){
                 //SLL
@@ -276,8 +279,17 @@ class Riscv_core
             }else if (fun3==1){
                 //BNE
                 if(regfile[rs1]!=regfile[rs2]){
+//                    if (pc==0x388){
+//                        cout << regfile[tp] <<endl;
+//                        cout << regfile[t0] <<endl;
+//                        cout << std::hex<<imm_b<<endl;
+//                    }
                     pc = pc + imm_b_64;
                 }else{
+//                    if (pc==0x388){
+//                        cout << regfile[tp] <<endl;
+//                        cout << regfile[t0] <<endl;
+//                    }
                     pc += 4;
                 }
             }else if (fun3==4){
@@ -373,8 +385,10 @@ class Riscv_core
                 }
             }
         }
+        regfile[0] = 0;
 
     }
+
 
 };
 
