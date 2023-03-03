@@ -2,17 +2,41 @@
 #include <bitset>
 #include <fstream>
 #include <string>
+#include <stdio.h>
 #include "Riscv_core.h"
 
 using namespace std;
+
+std::string exec(const char* cmd) {
+    char buffer[128];
+    std::string result = "";
+    FILE* pipe = popen(cmd, "r");
+    if (!pipe) throw std::runtime_error("popen() failed!");
+    try {
+        while (fgets(buffer, sizeof buffer, pipe) != NULL) {
+            result += buffer;
+        }
+    } catch (...) {
+        pclose(pipe);
+        throw;
+    }
+    pclose(pipe);
+    return result;
+}
 
 int main()
 {
    Riscv_core cpu = Riscv_core();
 
    //Read file and initialize memory
+   char input_file[35] = "elf2hex/tests/rv64ui-p-xori";
+   char a[150] = "elf2hex/elf2hex --bit-width 32 --input ";
+   strcat(a, input_file);
+    strcat(a, " --output data_hex.txt");
+    string ou = exec(a);
+
    ifstream inFile;
-   inFile.open("add.txt");
+   inFile.open("data_hex.txt");
    if (!inFile) {
     cerr << "Unable to open file";
     exit(1);   // call system to stop
@@ -28,11 +52,12 @@ int main()
         ptr++;
     }
 
-    for (int i=0;i<1000;i++){
+    //execute instructions
+    while (!cpu.ecall){
     cout << std::hex<< cpu.pc <<endl;
     cpu.exec_nxt_ins();
 
     }
-    cout << cpu.regfile[3] <<endl;
+    cout << cpu.regfile[gp] <<endl;
     return 0;
 }

@@ -13,6 +13,7 @@ class Riscv_core
         uint64_t regfile[32] = {0};
         uint8_t memory[1<<16];
         uint64_t pc = 0;
+        bool ecall=false;
 
     void exec_nxt_ins(){
 
@@ -80,6 +81,9 @@ class Riscv_core
 
         //fence
         if (opcode == 0b0001111 || opcode == 0b1110011){
+            if(fun3==0 && imm_i ==0){
+            ecall=true;
+            }
             pc+=4;
             return;
         }
@@ -219,13 +223,16 @@ class Riscv_core
             }else if (fun3==1){
                 //LH
                 uint16_t* t = (uint16_t*) &memory[regfile[rs1] + imm_i_64];
-                uint16_t t1 = *t;
+                int16_t t1 = *t;
                 regfile[rd] = (int64_t) t1;
+//                if (pc == 0x1a4){
+//                    cout<<(int64_t)regfile[rd]<<endl;
+//                }
                 pc += 4;
             }else if (fun3==2){
                 //LW
                 uint32_t* t = (uint32_t*) &memory[regfile[rs1] + imm_i_64];
-                uint32_t t1 = *t;
+                int32_t t1 = *t;
                 regfile[rd] = (int64_t) t1;
                 pc += 4;
             }else if (fun3==4){
@@ -279,17 +286,8 @@ class Riscv_core
             }else if (fun3==1){
                 //BNE
                 if(regfile[rs1]!=regfile[rs2]){
-//                    if (pc==0x388){
-//                        cout << regfile[tp] <<endl;
-//                        cout << regfile[t0] <<endl;
-//                        cout << std::hex<<imm_b<<endl;
-//                    }
                     pc = pc + imm_b_64;
                 }else{
-//                    if (pc==0x388){
-//                        cout << regfile[tp] <<endl;
-//                        cout << regfile[t0] <<endl;
-//                    }
                     pc += 4;
                 }
             }else if (fun3==4){
@@ -335,56 +333,58 @@ class Riscv_core
             pc = pc + imm_j_64;
         }else if (is_jalr){
             //JALR
-            regfile[rd] = pc + 4;
+            uint64_t temp = pc;
             pc = (regfile[rs1] + imm_i_64) & -2;
+            regfile[rd] = temp + 4;
         }else if (is_r32){
             if (fun3==0){
                 if (fun7==0){
                     //ADDW
-                    regfile[rd] = (int64_t) ( (int32_t)regfile[rs1] + (int32_t)regfile[rs2] );
+                    regfile[rd] = (int64_t) (int32_t) ( (int32_t)regfile[rs1] + (int32_t)regfile[rs2] );
                     pc += 4;
                 }else{
                     //SUBW
-                    regfile[rd] = (int64_t) ( (int32_t)regfile[rs1] - (int32_t)regfile[rs2] );
+                    regfile[rd] = (int64_t) (int32_t) ( (int32_t)regfile[rs1] - (int32_t)regfile[rs2] );
                     pc += 4;
                 }
 
             }else if (fun3==1){
                 //SLLW
-                regfile[rd] = (int64_t) ((uint32_t)regfile[rs1] << (uint32_t)(regfile[rs2] & 31));
+                regfile[rd] = (int64_t) (int32_t) ((uint32_t)regfile[rs1] << (uint32_t)(regfile[rs2] & 31));
                 pc += 4;
             }else if (fun3==5){
                 if (fun7==0){
                     //SRLW
-                    regfile[rd] = (int64_t) ((uint32_t)regfile[rs1] >> (uint32_t)(regfile[rs2] & 31));
+                    regfile[rd] = (int64_t) (int32_t) ((uint32_t)regfile[rs1] >> (uint32_t)(regfile[rs2] & 31));
                     pc += 4;
                 }else{
                     //SRAW
-                    regfile[rd] = (int64_t) ((int32_t)regfile[rs1] >> (uint32_t)(regfile[rs2] & 31));
+                    regfile[rd] = (int64_t) (int32_t) ((int32_t)regfile[rs1] >> (uint32_t)(regfile[rs2] & 31));
                     pc += 4;
                 }
             }
         }else if (is_i32){
             if (fun3==0){
                 //ADDIW
-                regfile[rd] = (int64_t) ( (int32_t)regfile[rs1] + (int32_t)imm_i );
+                regfile[rd] = (int64_t) (int32_t) ( (int32_t)regfile[rs1] + (int32_t)imm_i );
                 pc += 4;
             }else if(fun3==1){
                 //SLLIW
-                regfile[rd] = (int64_t) ((uint32_t)regfile[rs1] << (imm_i & 31));
+                regfile[rd] = (int64_t) (int32_t) ((uint32_t)regfile[rs1] <<  (imm_i & 31));
                 pc += 4;
             }else if (fun3==5){
                 if (ins < (1<<30)){
                     //SRLIW
-                    regfile[rd] = (int64_t) ((uint32_t)regfile[rs1] >> (imm_i & 31));
+                    regfile[rd] = (int64_t) (int32_t) ((uint32_t)regfile[rs1] >> (imm_i & 31));
                     pc += 4;
                 }else {
                     //SRAIW
-                    regfile[rd] = (int64_t) ((uint32_t)regfile[rs1] >> (imm_i & 31));
+                    regfile[rd] = (int64_t) (int32_t) ((int32_t)regfile[rs1] >> (imm_i & 31));
                     pc += 4;
                 }
             }
         }
+        //hardwire x0 to zero
         regfile[0] = 0;
 
     }

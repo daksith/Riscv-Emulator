@@ -18,5 +18,6 @@
 #define sp 2
 #define tp 4
 #define t0 5
+#define a4 14
 
 #endif // DECODE_DEFS_H_INCLUDED
